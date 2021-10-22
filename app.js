@@ -65,12 +65,15 @@ const galleryItems = [
   ];
 
 //Создание разметки галереи
-const getRef = function (selector) {
-  return document.querySelector(selector);
-}
+const galleryListRef = document.querySelector('ul.js-gallery');
+const modalRef = document.querySelector('div.lightbox');
+const modalImageREf = document.querySelector('img.lightbox__image');
+const modalButtonCloseRef = document.querySelector('button[data-action="close-lightbox"]');
+const modalOverlayRef = document.querySelector('div.lightbox__overlay');
+const imageInGalleryRef = document.querySelectorAll('img.gallery_image');
 
 const createGalleryItems = function () {
-    return galleryItems.map(({preview, original, description}) => {
+    return galleryItems.map(({preview, original, description}, index) => {
          return `<li class="gallery__item">
         <a
           class="gallery__link"
@@ -81,36 +84,38 @@ const createGalleryItems = function () {
             src=${preview};
             data-source=${original};
             alt=${description};
+            data-index="${index}"
           />
         </a>
       </li>`;
       }).join('');
 }
-getRef('ul.js-gallery').innerHTML = createGalleryItems(); 
-
+galleryListRef.innerHTML = createGalleryItems(); 
+let activeIndex = 0;
 
 //Делегирование на галерее и открытие модального окна
 const onGalleryImageClickModalOpen = function (e) {
-if(!e.target.classList.contains('gallery__image')) {
-  return;
-} 
-  e.preventDefault();
-  getRef('div.lightbox').classList.add('is-open');
-  getRef('img.lightbox__image').src = e.target.dataset.source;
+  activeIndex = + e.target.dataset.index;
+  if(!e.target.classList.contains('gallery__image')) {
+    return;
+  } 
+    e.preventDefault();
+    modalRef.classList.add('is-open');
+    modalImageREf.src = e.target.dataset.source;
 }
 
-getRef('ul.js-gallery').addEventListener('click', onGalleryImageClickModalOpen);
+galleryListRef.addEventListener('click', onGalleryImageClickModalOpen);
 
 //Закрытие модального окна по кнопке
 const onClickModalClose = function () {
-getRef('div.lightbox').classList.remove('is-open');
-getRef('img.lightbox__image').src = '';
+  modalRef.classList.remove('is-open');
+  modalImageREf.src = '';
 }
 
-getRef('button[data-action="close-lightbox"]').addEventListener('click', onClickModalClose);
+modalButtonCloseRef.addEventListener('click', onClickModalClose);
 
 //Закрытие модального окна по overlay
-getRef('div.lightbox__overlay').addEventListener('click', onClickModalClose);
+modalOverlayRef.addEventListener('click', onClickModalClose);
 
 //Закрытие модального окна по нажатию escape.
 //Пролистывание галлереи клавишами вправо и влево 
@@ -122,15 +127,20 @@ if(e.code === 'Escape') {
 const currentLi = e.target.parentNode;
 
 if(e.code === 'ArrowRight') {
-  const nextLi = currentLi.nextElementSibling;
-  const imgInNextLi = (nextLi.firstElementChild).firstElementChild;
-  getRef('img.lightbox__image').src = imgInNextLi.dataset.source;
+  activeIndex += 1;
+  if(activeIndex >= galleryItems.length) {
+    activeIndex = 0;
+  }
+  modalImageREf.src = galleryItems[activeIndex].original;
+  console.log(activeIndex);
 }
 
 if(e.code === 'ArrowLeft') {
-  const prevLi = currentLi.previousElementSibling;
-  const imgInPrevLi = (prevLi.firstElementChild).firstElementChild;
-  getRef('img.lightbox__image').src = imgInPrevLi.dataset.source;
+ activeIndex -= 1;
+ if(activeIndex < 0) {
+   activeIndex = galleryItems.length-1;
+ }
+ modalImageREf.src = galleryItems[activeIndex].original;
 }
 });
 
